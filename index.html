@@ -11,45 +11,53 @@
         .control-panel {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
             background: rgba(15, 23, 42, 0.95); color: white; padding: 20px;
-            border-radius: 12px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-radius: 12px; width: 310px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             backdrop-filter: blur(8px);
         }
         .temp-badge {
             display: inline-block; padding: 4px 10px; border-radius: 6px;
-            font-weight: bold; margin-top: 5px;
+            font-weight: bold; margin-top: 5px; font-size: 0.9em;
         }
         .hot { background-color: #ef4444; color: white; }
         .cool { background-color: #10b981; color: white; }
+        .btn-toggle {
+            width: 100%; padding: 10px; margin-top: 12px; border: none;
+            border-radius: 6px; font-weight: bold; cursor: pointer;
+            background: #3b82f6; color: white; transition: 0.2s;
+        }
+        .btn-toggle:hover { background: #2563eb; }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <h2 style="margin-top:0;">🌡️ Cool-Route</h2>
-        <p style="font-size: 0.9em; color: #94a3b8;">FortyGuard Ground Heat Engine (2m Gap)</p>
-        <hr style="border-color: #334155;">
+        <h2 style="margin-top:0; margin-bottom: 5px;">🌡️ Cool-Route</h2>
+        <p style="font-size: 0.85em; color: #94a3b8; margin-top:0;">FortyGuard Thermal Engine (2m Resolution)</p>
+        <hr style="border-color: #334155; margin: 15px 0;">
         <div>
             <strong>🔴 Direct Route Avg:</strong><br>
-            <span class="temp-badge hot">42.8 °C (Asphalt Trap)</span>
+            <span class="temp-badge hot">42.8 °C (Asphalt Heat Trap)</span>
         </div>
         <div style="margin-top: 12px;">
             <strong>🟢 Cool Route Avg:</strong><br>
-            <span class="temp-badge cool">34.2 °C (Shaded Path)</span>
+            <span class="temp-badge cool">34.2 °C (Shaded Canopy Path)</span>
         </div>
+        <button class="btn-toggle" onclick="toggleRouteFocus()">Center On Active Route</button>
     </div>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Initialize Map auto-centered on Downtown Dubai
         const map = L.map('map').setView([25.1972, 55.2744], 14);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Dark-mode basemap for high-contrast thermal visualization
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap | FortyGuard Temperature API'
         }).addTo(map);
 
-        // Coordinates for Downtown Dubai route comparison
         const directRouteCoords = [
             [25.2048, 55.2708],
             [25.1972, 55.2744],
@@ -63,24 +71,24 @@
             [25.1885, 55.2630]
         ];
 
-        // Direct Route (Red Line)
-        L.polyline(directRouteCoords, {
-            color: '#ef4444',
-            weight: 6,
-            opacity: 0.8,
-            dashArray: '10, 10'
+        // Direct Route Polyline (Red)
+        const directPolyline = L.polyline(directRouteCoords, {
+            color: '#ef4444', weight: 6, opacity: 0.85, dashArray: '8, 8'
         }).addTo(map).bindPopup('<b>Direct Route:</b> Unshaded Asphalt (42.8°C)');
 
-        // Cool Route (Green Line)
-        L.polyline(coolRouteCoords, {
-            color: '#10b981',
-            weight: 6,
-            opacity: 0.9
+        // Cool Route Polyline (Green)
+        const coolPolyline = L.polyline(coolRouteCoords, {
+            color: '#10b981', weight: 6, opacity: 0.95
         }).addTo(map).bindPopup('<b>Cool Route:</b> Shaded Canopy Path (34.2°C)');
 
-        // Start & End Markers
+        // Start & End Pins
         L.marker([25.2048, 55.2708]).addTo(map).bindPopup('<b>Start Point</b>');
         L.marker([25.1885, 55.2630]).addTo(map).bindPopup('<b>Destination</b>');
+
+        function toggleRouteFocus() {
+            const bounds = coolPolyline.getBounds();
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
     </script>
 </body>
 </html>

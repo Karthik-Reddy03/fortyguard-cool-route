@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FortyGuard Cool-Route Navigator</title>
-    <!-- Leaflet Map Engine Styles -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -30,11 +29,11 @@
         <p style="font-size: 0.9em; color: #94a3b8;">FortyGuard Ground Heat Engine (2m Gap)</p>
         <hr style="border-color: #334155;">
         <div>
-            <strong>Direct Route Avg:</strong><br>
+            <strong>🔴 Direct Route Avg:</strong><br>
             <span class="temp-badge hot">42.8 °C (Asphalt Trap)</span>
         </div>
         <div style="margin-top: 12px;">
-            <strong>Cool Route Avg:</strong><br>
+            <strong>🟢 Cool Route Avg:</strong><br>
             <span class="temp-badge cool">34.2 °C (Shaded Path)</span>
         </div>
     </div>
@@ -43,12 +42,45 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize Map centered on Dubai / GCC region
-        const map = L.map('map').setView([25.2048, 55.2708], 13);
+        const map = L.map('map').setView([25.1972, 55.2744], 14);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap | FortyGuard Temperature API'
         }).addTo(map);
+
+        // Coordinates for Downtown Dubai route comparison
+        const directRouteCoords = [
+            [25.2048, 55.2708],
+            [25.1972, 55.2744],
+            [25.1885, 55.2630]
+        ];
+
+        const coolRouteCoords = [
+            [25.2048, 55.2708],
+            [25.2010, 55.2780],
+            [25.1930, 55.2760],
+            [25.1885, 55.2630]
+        ];
+
+        // Direct Route (Red Line)
+        L.polyline(directRouteCoords, {
+            color: '#ef4444',
+            weight: 6,
+            opacity: 0.8,
+            dashArray: '10, 10'
+        }).addTo(map).bindPopup('<b>Direct Route:</b> Unshaded Asphalt (42.8°C)');
+
+        // Cool Route (Green Line)
+        L.polyline(coolRouteCoords, {
+            color: '#10b981',
+            weight: 6,
+            opacity: 0.9
+        }).addTo(map).bindPopup('<b>Cool Route:</b> Shaded Canopy Path (34.2°C)');
+
+        // Start & End Markers
+        L.marker([25.2048, 55.2708]).addTo(map).bindPopup('<b>Start Point</b>');
+        L.marker([25.1885, 55.2630]).addTo(map).bindPopup('<b>Destination</b>');
     </script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortyGuard Cool-Route Navigator</title>
+    <!-- Leaflet Map Engine Styles -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100vw; }
+        .control-panel {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            background: rgba(15, 23, 42, 0.95); color: white; padding: 20px;
+            border-radius: 12px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+        }
+        .temp-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 6px;
+            font-weight: bold; margin-top: 5px;
+        }
+        .hot { background-color: #ef4444; color: white; }
+        .cool { background-color: #10b981; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <h2 style="margin-top:0;">🌡️ Cool-Route</h2>
+        <p style="font-size: 0.9em; color: #94a3b8;">FortyGuard Ground Heat Engine (2m Gap)</p>
+        <hr style="border-color: #334155;">
+        <div>
+            <strong>Direct Route Avg:</strong><br>
+            <span class="temp-badge hot">42.8 °C (Asphalt Trap)</span>
+        </div>
+        <div style="margin-top: 12px;">
+            <strong>Cool Route Avg:</strong><br>
+            <span class="temp-badge cool">34.2 °C (Shaded Path)</span>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map centered on Dubai / GCC region
+        const map = L.map('map').setView([25.2048, 55.2708], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap | FortyGuard Temperature API'
+        }).addTo(map);
+    </script>
+</body>
+</html>

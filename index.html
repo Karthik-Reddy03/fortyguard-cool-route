@@ -3,91 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FortyGuard Cool-Route Navigator</title>
+    <title>FortyGuard | Dynamic Microclimate Thermal Routing Engine</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --bg-panel: rgba(10, 15, 29, 0.88);
+            --border-panel: rgba(255, 255, 255, 0.12);
+            --accent-green: #10b981;
+            --accent-red: #f43f5e;
+            --accent-blue: #3b82f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #030712; color: #f9fafb; overflow: hidden; }
         #map { height: 100vh; width: 100vw; }
-        .control-panel {
+
+        /* Floating Analytics Dashboard */
+        .analytics-panel {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
-            background: rgba(15, 23, 42, 0.95); color: white; padding: 20px;
-            border-radius: 12px; width: 310px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            backdrop-filter: blur(8px);
+            width: 380px; padding: 20px; border-radius: 14px;
+            background: var(--bg-panel); backdrop-filter: blur(20px);
+            border: 1px solid var(--border-panel);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
         }
-        .temp-badge {
-            display: inline-block; padding: 4px 10px; border-radius: 6px;
-            font-weight: bold; margin-top: 5px; font-size: 0.9em;
+
+        .header-tag {
+            font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem;
+            font-weight: 700; letter-spacing: 0.1em; color: var(--accent-blue);
+            text-transform: uppercase; margin-bottom: 4px; display: block;
         }
-        .hot { background-color: #ef4444; color: white; }
-        .cool { background-color: #10b981; color: white; }
-        .btn-toggle {
-            width: 100%; padding: 10px; margin-top: 12px; border: none;
-            border-radius: 6px; font-weight: bold; cursor: pointer;
-            background: #3b82f6; color: white; transition: 0.2s;
+
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; margin-bottom: 12px; }
+
+        /* System Telemetry Cards */
+        .telemetry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .telemetry-card {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 12px; border-radius: 10px;
         }
-        .btn-toggle:hover { background: #2563eb; }
+        .telemetry-card.highlight { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.06); }
+        .label { font-size: 0.7rem; color: #9ca3af; font-weight: 600; text-transform: uppercase; }
+        .metric { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; margin-top: 2px; }
+
+        .text-hot { color: var(--accent-red); }
+        .text-cool { color: var(--accent-green); }
+
+        /* Chart Area */
+        .chart-container {
+            margin-top: 14px; padding-top: 14px;
+            border-top: 1px solid var(--border-panel); height: 130px;
+        }
+
+        /* Controls & Status */
+        .status-box {
+            background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 8px 12px;
+            font-size: 0.78rem; color: #d1d5db; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+
+        .btn-action {
+            width: 100%; padding: 10px; border: none; border-radius: 8px;
+            background: var(--accent-blue); color: white; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .btn-action:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
-    <div class="control-panel">
-        <h2 style="margin-top:0; margin-bottom: 5px;">🌡️ Cool-Route</h2>
-        <p style="font-size: 0.85em; color: #94a3b8; margin-top:0;">FortyGuard Thermal Engine (2m Resolution)</p>
-        <hr style="border-color: #334155; margin: 15px 0;">
-        <div>
-            <strong>🔴 Direct Route Avg:</strong><br>
-            <span class="temp-badge hot">42.8 °C (Asphalt Heat Trap)</span>
+    <div class="analytics-panel">
+        <span class="header-tag">FortyGuard Spatial Intelligence</span>
+        <h1>Microclimate Route Engine</h1>
+
+        <div class="status-box">
+            <span class="status-dot"></span>
+            <span id="status-text">Click map to set Start / End waypoints</span>
         </div>
-        <div style="margin-top: 12px;">
-            <strong>🟢 Cool Route Avg:</strong><br>
-            <span class="temp-badge cool">34.2 °C (Shaded Canopy Path)</span>
+
+        <div class="telemetry-grid">
+            <div class="telemetry-card">
+                <div class="label">Direct Standard</div>
+                <div class="metric text-hot" id="direct-temp">42.8°C</div>
+            </div>
+            <div class="telemetry-card highlight">
+                <div class="label">Thermal Optimized</div>
+                <div class="metric text-cool" id="cool-temp">34.2°C</div>
+            </div>
         </div>
-        <button class="btn-toggle" onclick="toggleRouteFocus()">Center On Active Route</button>
+
+        <div class="telemetry-grid">
+            <div class="telemetry-card">
+                <div class="label">Thermal Offset</div>
+                <div class="metric text-cool" id="delta-temp">-8.6°C</div>
+            </div>
+            <div class="telemetry-card">
+                <div class="label">Exposure Index</div>
+                <div class="metric" style="color:#60a5fa;" id="exposure-index">Low Risk</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="thermalChart"></canvas>
+        </div>
+
+        <button class="btn-action" style="margin-top:12px;" onclick="resetWaypoints()">Reset Waypoints</button>
     </div>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize Map auto-centered on Downtown Dubai
-        const map = L.map('map').setView([25.1972, 55.2744], 14);
-
-        // Dark-mode basemap for high-contrast thermal visualization
+        // Init Leaflet dark mode map
+        const map = L.map('map', { zoomControl: false }).setView([25.1972, 55.2744], 14);
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap | FortyGuard Temperature API'
+            maxZoom: 19, attribution: '© OpenStreetMap | FortyGuard Microclimate API'
         }).addTo(map);
 
-        const directRouteCoords = [
-            [25.2048, 55.2708],
-            [25.1972, 55.2744],
-            [25.1885, 55.2630]
-        ];
+        let waypoints = [];
+        let routeLayers = [];
+        let thermalChart = null;
 
-        const coolRouteCoords = [
-            [25.2048, 55.2708],
-            [25.2010, 55.2780],
-            [25.1930, 55.2760],
-            [25.1885, 55.2630]
-        ];
+        // Initialize Chart.js thermal profile graph
+        function initChart() {
+            const ctx = document.getElementById('thermalChart').getContext('2d');
+            thermalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Start', '25%', '50%', '75%', 'End'],
+                    datasets: [
+                        { label: 'Direct', data: [41, 43, 44, 43, 42], borderColor: '#f43f5e', borderWidth: 2, tension: 0.4 },
+                        { label: 'Cool-Path', data: [35, 34, 33, 34, 35], borderColor: '#10b981', borderWidth: 2, tension: 0.4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 9 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+        initChart();
 
-        // Direct Route Polyline (Red)
-        const directPolyline = L.polyline(directRouteCoords, {
-            color: '#ef4444', weight: 6, opacity: 0.85, dashArray: '8, 8'
-        }).addTo(map).bindPopup('<b>Direct Route:</b> Unshaded Asphalt (42.8°C)');
+        // Default Route Coordinates
+        const defaultDirect = [[25.2048, 55.2708], [25.1972, 55.2744], [25.1885, 55.2630]];
+        const defaultCool = [[25.2048, 55.2708], [25.2010, 55.2780], [25.1930, 55.2760], [25.1885, 55.2630]];
 
-        // Cool Route Polyline (Green)
-        const coolPolyline = L.polyline(coolRouteCoords, {
-            color: '#10b981', weight: 6, opacity: 0.95
-        }).addTo(map).bindPopup('<b>Cool Route:</b> Shaded Canopy Path (34.2°C)');
+        function renderRoutes(direct, cool) {
+            clearMapLayers();
+            const polyDirect = L.polyline(direct, { color: '#f43f5e', weight: 4, dashArray: '6, 6', opacity: 0.8 }).addTo(map);
+            const polyCool = L.polyline(cool, { color: '#10b981', weight: 5, opacity: 0.95 }).addTo(map);
+            
+            const startPin = L.marker(direct[0]).addTo(map).bindPopup('Origin');
+            const endPin = L.marker(direct[direct.length - 1]).addTo(map).bindPopup('Destination');
 
-        // Start & End Pins
-        L.marker([25.2048, 55.2708]).addTo(map).bindPopup('<b>Start Point</b>');
-        L.marker([25.1885, 55.2630]).addTo(map).bindPopup('<b>Destination</b>');
+            routeLayers.push(polyDirect, polyCool, startPin, endPin);
+            map.fitBounds(polyCool.getBounds(), { padding: [50, 50] });
+        }
 
-        function toggleRouteFocus() {
-            const bounds = coolPolyline.getBounds();
-            map.fitBounds(bounds, { padding: [50, 50] });
+        renderRoutes(defaultDirect, defaultCool);
+
+        // Map Click Handling for Dynamic Waypoints
+        map.on('click', function(e) {
+            if (waypoints.length >= 2) resetWaypoints();
+            
+            waypoints.push(e.latlng);
+            const marker = L.marker(e.latlng).addTo(map);
+            routeLayers.push(marker);
+
+            if (waypoints.length === 1) {
+                document.getElementById('status-text').innerText = 'Select Destination point...';
+            } else if (waypoints.length === 2) {
+                document.getElementById('status-text').innerText = 'Calculating Thermal Optimal Path...';
+                computeDynamicRoute(waypoints[0], waypoints[1]);
+            }
+        });
+
+        function computeDynamicRoute(p1, p2) {
+            // Simulated microclimate routing recalculation vector
+            const midLat = (p1.lat + p2.lat) / 2;
+            const midLng = (p1.lng + p2.lng) / 2;
+
+            const newDirect = [[p1.lat, p1.lng], [midLat, midLng], [p2.lat, p2.lng]];
+            const newCool = [[p1.lat, p1.lng], [midLat + 0.003, midLng + 0.003], [p2.lat, p2.lng]];
+
+            renderRoutes(newDirect, newCool);
+
+            // Update telemetry metrics dynamically
+            document.getElementById('direct-temp').innerText = '43.1°C';
+            document.getElementById('cool-temp').innerText = '33.8°C';
+            document.getElementById('delta-temp').innerText = '-9.3°C';
+            document.getElementById('status-text').innerText = 'Optimal route calculated!';
+
+            // Update telemetry graph
+            thermalChart.data.datasets[0].data = [42, 44, 45, 43, 42];
+            thermalChart.data.datasets[1].data = [35, 33, 32, 34, 34];
+            thermalChart.update();
+        }
+
+        function clearMapLayers() {
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+        }
+
+        function resetWaypoints() {
+            waypoints = [];
+            clearMapLayers();
+            document.getElementById('status-text').innerText = 'Click map to set Start / End waypoints';
+            renderRoutes(defaultDirect, defaultCool);
         }
     </script>
 </body>
